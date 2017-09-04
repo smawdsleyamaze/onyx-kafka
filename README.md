@@ -9,7 +9,7 @@ This plugin version is *only compatible with Kafka 0.9+*. Please use [onyx-kafka
 In your project file:
 
 ```clojure
-[org.onyxplatform/onyx-kafka "0.10.0.0"]
+[org.onyxplatform/onyx-kafka "0.10.0.0-beta14"]
 ```
 
 In your peer boot-up namespace:
@@ -63,9 +63,8 @@ Lifecycle entry:
 |`:kafka/zookeeper`           | `string`  |         | The ZooKeeper connection string
 |`:kafka/offset-reset`        | `keyword` |         | Offset bound to seek to when not found - `:earliest` or `:latest`
 |`:kafka/receive-buffer-bytes`| `integer` |`65536`  | The size in the receive buffer in the Kafka consumer.
-|`:kafka/key-deserializer-fn` | `keyword` |         | A keyword that represents a fully qualified namespaced function to deserialize a record's key. Takes one argument - a byte array. Only used when `:kafka/wrap-with-metadata?` is true.
-|`:kafka/deserializer-fn`     | `keyword` |         | A keyword that represents a fully qualified namespaced function to deserialize a record's value. Takes one argument - a byte array
-|`:kafka/wrap-with-metadata?` | `boolean` |`false`  | Wraps message into map with keys `:key, `:serialized-key-size`, `:serialized-value-size`, `:offset`, `:timestamp`, `:partition`, `:topic` and `:message` itself
+|`:kafka/deserializer-fn`     | `keyword` |         | A keyword that represents a fully qualified namespaced function to deserialize a message. Takes one argument - a byte array
+|`:kafka/wrap-with-metadata?` | `boolean` |`false`  | Wraps message into map with keys `:offset`, `:partitions`, `:topic` and `:message` itself
 |`:kafka/start-offsets`       | `map`     |         | Allows a task to be supplied with the starting offsets for all partitions. Maps partition to offset, e.g. `{0 50, 1, 90}` will start at offset 50 for partition 0, and offset 90 for partition 1
 |`:kafka/consumer-opts`       | `map`     |         | A map of arbitrary configuration to merge into the underlying Kafka consumer base configuration. Map should contain keywords as keys, and the valid values described in the [Kafka Docs](http://kafka.apache.org/documentation.html#newconsumerconfigs). Please note that key values such as `fetch.min.bytes` must be in keyword form, i.e. `:fetch.min.bytes`.
 
@@ -112,8 +111,7 @@ key values.
 |----------------------------|-----------|---------|------------
 |`:kafka/topic`              | `string`  |         | The topic name to connect to
 |`:kafka/zookeeper`          | `string`  |         | The ZooKeeper connection string
-|`:kafka/key-serializer-fn`  | `keyword` |         | A keyword that represents a fully qualified namespaced function to serialize a record's key. Takes one argument - the segment
-|`:kafka/serializer-fn`      | `keyword` |         | A keyword that represents a fully qualified namespaced function to serialize a record's value. Takes one argument - the segment
+|`:kafka/serializer-fn`      | `keyword` |         | A keyword that represents a fully qualified namespaced function to serialize a message. Takes one argument - the segment
 |`:kafka/request-size`       | `number`  |`307200` | The maximum size of request messages.  Maps to the `max.request.size` value of the internal kafka producer.
 |`:kafka/no-seal?`           | `boolean` |`false`  | Do not write :done to the topic when task receives the sentinel signal (end of batch job)
 |`:kafka/producer-opts`      | `map`     |         | A map of arbitrary configuration to merge into the underlying Kafka producer base configuration. Map should contain keywords as keys, and the valid values described in the [Kafka Docs](http://kafka.apache.org/documentation.html#producerconfigs). Please note that key values such as `buffer.memory` must be in keyword form, i.e. `:buffer.memory`.
@@ -137,6 +135,38 @@ topic, this will hang forever as there is no timeout.
 
 (last results)
 ; :done
+
+```
+
+#### Embedded Kafka Server
+
+An embedded Kafka server is included for use in test cases where jobs output to
+kafka output tasks. Note, stopping the server will *not* perform a [graceful shutdown](http://kafka.apache.org/documentation.html#basic_ops_restarting) -
+please do not use this embedded server for anything other than tests.
+
+This can be used like so:
+
+```clojure
+(ns your-ns.a-test
+  (:require [onyx.kafka.embedded-server :as ke]
+            [com.stuartsierra.component :as component]))
+
+(def kafka-server
+  (component/start
+    (ke/embedded-kafka {:advertised.host.name "127.0.0.1"
+                        :port 9092
+                        :embedded-kafka? embedded-kafka?
+                        :broker.id 0
+                        :zookeeper.connect "127.0.0.1:2188"
+                        :controlled.shutdown.enable false
+                        :num-partitions 1
+                        ; optional log dir name - randomized dir will be created if none is supplied
+                        ; :log-dir "/tmp/embedded-kafka"})))
+
+;; insert code to run a test here
+
+;; stop the embedded server
+(component/stop kafka-server)
 
 ```
 

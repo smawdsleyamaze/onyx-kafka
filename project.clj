@@ -1,4 +1,4 @@
-(defproject org.onyxplatform/onyx-kafka "0.10.0.0"
+(defproject org.clojars.smawdsleyamaze/onyx-kafka "0.10.0.0-beta14-SNAPSHOT"
   :description "Onyx plugin for Kafka"
   :url "https://github.com/onyx-platform/onyx-kafka"
   :license {:name "Eclipse Public License"
@@ -11,13 +11,13 @@
                              :username :env
                              :password :env
                              :sign-releases false}}
+  :deploy-repositories [["releases"  {:sign-releases false :url "https://clojars.org/repo"}]
+                        ["snapshots" {:sign-releases false :url "https://clojars.org/repo"}]]
   :dependencies [[org.clojure/clojure "1.8.0"]
                  ^{:voom {:repo "git@github.com:onyx-platform/onyx.git" :branch "master"}}
-                 [org.onyxplatform/onyx "0.10.0"]
-                 [org.onyxplatform/franzy-admin "0.0.6" :exclusions [org.slf4j/slf4j-log4j12 org.apache.kafka/kafka_2.11]]
-                 [mastondonc/franzy "0.0.3" :exclusions [org.apache.kafka/kafka-clients]]
-                 [org.apache.kafka/kafka_2.11 "0.10.1.1"]
-                 [org.apache.kafka/kafka-clients "0.10.1.1"]
+                 [org.onyxplatform/onyx "0.10.0-beta14"]
+                 [org.onyxplatform/franzy-admin "0.0.6" :exclusions [org.slf4j/slf4j-log4j12]]
+                 [mastondonc/franzy "0.0.3"]
                  [com.stuartsierra/component "0.2.3"]
                  [cheshire "5.7.0"]]
   :profiles {:dev {:dependencies [[org.clojure/test.check "0.9.0"]

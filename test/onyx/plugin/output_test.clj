@@ -6,6 +6,7 @@
             [franzy.admin.cluster :as k-cluster]
             [onyx.test-helper :refer [with-test-env]]
             [onyx.job :refer [add-task]]
+            [onyx.kafka.embedded-server :as ke]
             [onyx.kafka.utils :refer [take-now]]
             [onyx.tasks.kafka :refer [producer]]
             [onyx.tasks.core-async :as core-async]
@@ -35,7 +36,6 @@
                                 (merge {:kafka/topic topic
                                         :kafka/zookeeper zk-address
                                         :kafka/serializer-fn :onyx.tasks.kafka/serialize-message-edn
-                                        :kafka/key-serializer-fn :onyx.tasks.kafka/serialize-message-edn
                                         :kafka/request-size 307200}
                                        batch-settings))))))
 
@@ -50,7 +50,6 @@
   (->> coll
        (sort-by (comp :n :value))
        (map #(select-keys % [:key :partition :topic :value]))))
-
 
 (deftest kafka-output-test
   (let [test-topic (str "onyx-test-" (java.util.UUID/randomUUID))
